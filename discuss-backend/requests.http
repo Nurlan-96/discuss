@@ -1,0 +1,57 @@
+### Register a user
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "john",
+    "email": "john@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+
+### Try registering the same user again
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "john",
+    "email": "john@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+
+### Try invalid registration
+POST http://localhost:8080/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "",
+    "email": "invalid-email",
+    "password": "123",
+    "confirmPassword": "456"
+}
+
+### Login using username
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "john",
+    "password": "password123"
+}
+
+### Login using email
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "john@example.com",
+    "password": "password123"
+}
+
+### Access protected endpoint without token
+GET http://localhost:8080/api/v1/users/me
+
+### Access protected endpoint with JWT
+GET http://localhost:8080/api/v1/users/me
+Authorization: Bearer
