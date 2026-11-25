@@ -9,6 +9,7 @@ public class UserResponse {
     private String email;
     private int reputation;
     private Instant createdAt;
+    private String bio;
 
     public UserResponse() {
     }
@@ -51,5 +52,13 @@ public class UserResponse {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+      public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 }
