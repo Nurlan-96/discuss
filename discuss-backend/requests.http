@@ -1,5 +1,19 @@
-### Register a user
-POST http://localhost:8080/api/v1/auth/register
+@baseUrl = http://localhost:8080
+
+# Automatically extract JWTs from login responses
+@token = {{loginJohn.response.body.$.accessToken}}
+@otherToken = {{loginJane.response.body.$.accessToken}}
+
+# Replace with an ID returned by Create post
+@postId = YOUR_POST_ID
+
+
+###########################################################
+# 1. AUTHENTICATION
+###########################################################
+
+### Register John
+POST {{baseUrl}}/api/v1/auth/register
 Content-Type: application/json
 
 {
@@ -9,8 +23,9 @@ Content-Type: application/json
     "confirmPassword": "password123"
 }
 
-### Try registering the same user again
-POST http://localhost:8080/api/v1/auth/register
+
+### Try registering John again
+POST {{baseUrl}}/api/v1/auth/register
 Content-Type: application/json
 
 {
@@ -20,8 +35,9 @@ Content-Type: application/json
     "confirmPassword": "password123"
 }
 
-### Try invalid registration
-POST http://localhost:8080/api/v1/auth/register
+
+### Invalid registration
+POST {{baseUrl}}/api/v1/auth/register
 Content-Type: application/json
 
 {
@@ -31,8 +47,22 @@ Content-Type: application/json
     "confirmPassword": "456"
 }
 
-### Login using username
-POST http://localhost:8080/api/v1/auth/login
+
+### Register with mismatched passwords
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "john_test",
+    "email": "john_test@example.com",
+    "password": "password123",
+    "confirmPassword": "different123"
+}
+
+
+### Login as John
+# @name loginJohn
+POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 
 {
@@ -40,8 +70,9 @@ Content-Type: application/json
     "password": "password123"
 }
 
-### Login using email
-POST http://localhost:8080/api/v1/auth/login
+
+### Login as John using email
+POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 
 {
@@ -49,9 +80,303 @@ Content-Type: application/json
     "password": "password123"
 }
 
-### Access protected endpoint without token
-GET http://localhost:8080/api/v1/users/me
 
-### Access protected endpoint with JWT
-GET http://localhost:8080/api/v1/users/me
-Authorization: Bearer
+### Login with incorrect password
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "john",
+    "password": "wrongpassword"
+}
+
+
+###########################################################
+# 2. USER PROFILE
+###########################################################
+
+### Get current user without authentication
+GET {{baseUrl}}/api/v1/users/me
+
+
+### Get current user profile
+GET {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+
+
+### Update profile - bio
+PATCH {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "bio": "Backend developer interested in Java and Spring Boot."
+}
+
+
+### Update profile - username
+PATCH {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "username": "john_dev"
+}
+
+
+### Update profile - both fields
+PATCH {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "username": "john",
+    "bio": "I enjoy programming and technology."
+}
+
+
+### Try invalid username
+PATCH {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "username": "ab"
+}
+
+
+###########################################################
+# 3. POSTS - CREATE
+###########################################################
+
+### Create text post
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Learning Spring Boot",
+    "content": "What resources would you recommend for learning Spring Boot?"
+}
+
+
+### Create link post
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Spring Boot Documentation",
+    "url": "https://spring.io/projects/spring-boot",
+    "content": "Official Spring Boot documentation."
+}
+
+
+### Create image post
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "My new setup",
+    "imageUrl": "https://example.com/setup.png"
+}
+
+
+### Create post with text and image
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "My development setup",
+    "content": "Finally finished setting everything up!",
+    "imageUrl": "https://example.com/setup.png"
+}
+
+
+###########################################################
+# 4. POSTS - VALIDATION
+###########################################################
+
+### Create post without title
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "content": "This post has no title."
+}
+
+
+### Create post without content, URL or image
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Empty post"
+}
+
+
+### Create post with invalid URL
+POST {{baseUrl}}/api/v1/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Invalid link",
+    "url": "not-a-valid-url"
+}
+
+
+### Create post without authentication
+POST {{baseUrl}}/api/v1/posts
+Content-Type: application/json
+
+{
+    "title": "Unauthorized post",
+    "content": "This should not be created."
+}
+
+
+###########################################################
+# 5. POSTS - RETRIEVE
+###########################################################
+
+### Get post by ID
+GET {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{token}}
+
+
+### Get nonexistent post
+GET {{baseUrl}}/api/v1/posts/000000000000000000000000
+Authorization: Bearer {{token}}
+
+
+### Get post without authentication
+GET {{baseUrl}}/api/v1/posts/{{postId}}
+
+
+###########################################################
+# 6. POSTS - UPDATE
+###########################################################
+
+### Update post title and content
+PATCH {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "Learning Spring Boot - Updated",
+    "content": "Updated content."
+}
+
+
+### Update only the title
+PATCH {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "New post title"
+}
+
+
+### Update only the content
+PATCH {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "content": "Updated post content."
+}
+
+
+### Update post with invalid title
+PATCH {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": ""
+}
+
+
+### Update nonexistent post
+PATCH {{baseUrl}}/api/v1/posts/000000000000000000000000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "This post doesn't exist"
+}
+
+
+### Update post without authentication
+PATCH {{baseUrl}}/api/v1/posts/{{postId}}
+Content-Type: application/json
+
+{
+    "title": "Unauthorized update"
+}
+
+
+###########################################################
+# 7. POSTS - DELETE
+###########################################################
+
+### Delete post
+DELETE {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{token}}
+
+
+### Delete nonexistent post
+DELETE {{baseUrl}}/api/v1/posts/000000000000000000000000
+Authorization: Bearer {{token}}
+
+
+### Delete post without authentication
+DELETE {{baseUrl}}/api/v1/posts/{{postId}}
+
+
+###########################################################
+# 8. SECOND USER - OWNERSHIP TESTS
+###########################################################
+
+### Register Jane
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "jane",
+    "email": "jane@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+
+
+### Login as Jane
+# @name loginJane
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "jane",
+    "password": "password123"
+}
+
+
+### Jane tries to update John's post
+PATCH {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{otherToken}}
+Content-Type: application/json
+
+{
+    "title": "Trying to modify someone else's post"
+}
+
+
+### Jane tries to delete John's post
+DELETE {{baseUrl}}/api/v1/posts/{{postId}}
+Authorization: Bearer {{otherToken}}
